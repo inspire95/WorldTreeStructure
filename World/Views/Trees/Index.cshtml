@@ -1,0 +1,92 @@
+@model IEnumerable<World.Models.Tree>
+
+@{
+    ViewBag.Title = "Index";
+}
+
+@{
+    string GetPath(World.Models.Tree tree)
+    {
+        World.Models.Tree t = tree;
+        string path = tree.Name;
+        while (t != t.Parent)
+        {
+            path = t.Parent.Name + " > " + path;
+            t = t.Parent;
+        }
+        return path;
+    }
+}
+
+@helper DisplayList(World.Models.Tree tree)
+{
+    <li>
+        <div class="btn-group" role="group" aria-label="...">
+            <a href='@Url.Action("Delete", "Trees", new { id = tree.Id})'>
+                <span class="glyphicon glyphicon-trash"></span>
+            </a>
+            <a href='@Url.Action("Edit", "Trees", new { id = tree.Id})'>
+                <span class="glyphicon glyphicon-pencil"></span>
+            </a>
+            <a href='@Url.Action("Create", "Trees", new { id = tree.Id})'>
+                <span class="glyphicon glyphicon-plus"></span>
+            </a>
+        </div>
+        @if (tree.Childrens.Where(tr => tr.Id != tree.Id).ToList().Count > 0)
+        {
+            <span class="caretList">@Html.ActionLink(tree.Name, "Index", new { id = tree.Id })</span>
+            <ul class="nested">
+                @foreach (var t in tree.Childrens.Where(tr => tr.Id != tree.Id))
+                {
+                    @DisplayList(t);
+                }
+            </ul>
+        }
+        else
+        {
+            @Html.ActionLink(tree.Name, "Index", new { id = tree.Id })
+        }
+    </li>
+}
+
+<h2>World Tree Stucture</h2>
+
+<p>
+    @Html.ActionLink("Create New Root", "Create")
+</p>
+
+<div class="detailContainer">
+    <div class="treeList">
+        <ul id="list">
+            @foreach (var item in Model.Where(tree => tree.ParentId == tree.Id))
+            {
+                @DisplayList(item)
+            }
+            <li>
+                <a href='@Url.Action("Create", "Trees")'>
+                    <span class="glyphicon glyphicon-plus"></span>Add new root
+                </a>
+            </li>
+        </ul>
+    </div>
+    <div class="selectedDetail">
+        @if (ViewBag.SelectedId != null)
+        {
+            World.Models.Tree t = Model.Where(tree => tree.Id == ViewBag.SelectedId).SingleOrDefault();
+            <div class="detailName">
+                <h2 class="noMargin">@Html.DisplayFor(tree => t.Name)</h2>
+                <h6>@GetPath(t)</h6>
+            </div>
+            <div class="detailList">
+                <ul id="list">
+                    @foreach (World.Models.Tree tree in t.Childrens.Where(tr => tr.Id != t.Id))
+                    {
+                        <li>
+                            @Html.ActionLink(tree.Name, "Index", new { id = tree.Id })
+                        </li>
+                    }
+                </ul>
+            </div>
+        }
+    </div>
+</div>
